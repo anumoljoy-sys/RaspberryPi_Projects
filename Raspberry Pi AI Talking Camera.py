@@ -116,9 +116,9 @@ if __name__ == "__main__":
                     cv2.imwrite(image_path, frame)
                     print(f"Image captured and saved to {image_path}")
                 elif user_input == 'q':
-                print("Quitting...")
-                cap.release()
-                sys.exit(0)
+                    print("Quitting...")
+                    cap.release()
+                    sys.exit(0)
                 else:
                     continue
          # Run inference
