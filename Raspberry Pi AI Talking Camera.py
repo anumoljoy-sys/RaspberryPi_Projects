@@ -102,20 +102,25 @@ if __name__ == "__main__":
     while True:
          
         if continuos:
-            print("Press Enter to capture the frame or q and Enter to quit...")
-            user_input = input().strip().lower()
-            if user_input == '':
+            #print("Press Enter to capture the frame or q and Enter to quit...")
+            #user_input = input().strip().lower()
+            #if user_input == '':
                 ret, frame = cap.read()
                 if not ret:
                     print("Cam read error")
-                cv2.imwrite(image_path, frame)
-                print(f"Image captured and saved to {image_path}")
-            elif user_input == 'q':
+                    continue
+                cv2.imshow("Preview", frame)
+                key = cv2.waitKey(1) & 0xFF
+                print("Press Enter to capture the frame or q and Enter to quit...")
+                if key in [10, 13]:   # Enter
+                    cv2.imwrite(image_path, frame)
+                    print(f"Image captured and saved to {image_path}")
+                elif user_input == 'q':
                 print("Quitting...")
                 cap.release()
                 sys.exit(0)
-            else:
-                continue
+                else:
+                    continue
          # Run inference
         print("\nRunning inference...")
         image_abspath= os.path.abspath(image_path)
