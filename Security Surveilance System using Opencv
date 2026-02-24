@@ -1,0 +1,70 @@
+import cv2
+import numpy as np
+import requests
+import time
+
+ESP_IP = "192.168.137.64"   # NodeMCU IP
+BUZZER_ON_URL = f"http://{ESP_IP}/buzzer/on"
+BUZZER_OFF_URL = f"http://{ESP_IP}/buzzer/off"
+
+# -------------------------------
+# CAMERA SETUP
+# -------------------------------
+cap = cv2.VideoCapture(0)
+
+ret, prev_frame = cap.read()
+prev_gray = cv2.cvtColor(prev_frame, cv2.COLOR_BGR2GRAY)
+
+VIOLENCE_THRESHOLD = 500000   # adjust if needed
+alert_sent = False
+
+# -------------------------------
+# VIOLENCE DETECTION FUNCTION
+# -------------------------------
+def violence_detected(curr_gray, prev_gray):
+    diff = cv2.absdiff(prev_gray, curr_gray)
+    _, thresh = cv2.threshold(diff, 25, 255, cv2.THRESH_BINARY)
+    motion_score = np.sum(thresh)
+
+    print("Motion Score:", motion_score)
+
+    if motion_score > VIOLENCE_THRESHOLD:
+        return True
+    return False
+
+# -------------------------------
+# MAIN LOOP
+# -------------------------------
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+    if violence_detected(gray, prev_gray):
+        cv2.putText(frame, "VIOLENCE DETECTED", (30,40),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
+
+        if not alert_sent:
+            try:
+                requests.get(BUZZER_ON_URL, timeout=0.5)
+                alert_sent = True
+            except:
+                pass
+    else:
+        alert_sent = False
+        try:
+            requests.get(BUZZER_OFF_URL, timeout=0.5)
+        except:
+            pass
+
+    prev_gray = gray
+
+    cv2.imshow("Violence Detection", frame)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
+
